@@ -26,8 +26,8 @@ class vtkConan(ConanFile):
         freely available software system for 3D computer graphics, \
         image processing, and visualization."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = "shared=True"
+    # options = {"shared": [True, False]}
+    # default_options = "shared=True"
     generators = "cmake"
 
     def source(self):
