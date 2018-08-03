@@ -68,3 +68,10 @@ conan_basic_setup()""")
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         self.cpp_info.includedirs = ["include/vtk-8.1"]
+
+        self.cpp_info.defines = ["vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)",
+         "vtkIOExport_AUTOINIT=1(vtkIOExportOpenGL2)",
+         "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)",
+         "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)",
+         "vtkRenderingOpenGL2_AUTOINIT=1(vtkRenderingGL2PSOpenGL2)",
+         "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)"]
