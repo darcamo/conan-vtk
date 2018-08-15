@@ -38,7 +38,8 @@ class vtkConan(ConanFile):
                               "project(VTK)",
                               """project(VTK)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()""")
+conan_basic_setup()
+SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
 
     def imports(self):
         self.copy("*.dll", dst="bin", src="bin")
