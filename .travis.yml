@@ -56,14 +56,14 @@ matrix:
       # - <<: *linux
       #   env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=darcamo/conangcc7 CONAN_CURRENT_PAGE=8
 
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=1
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=2
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=3
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=4
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=1
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=2
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=3
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=4
       # - <<: *linux
       #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=5
       # - <<: *linux
@@ -77,10 +77,10 @@ matrix:
         env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=1
       - <<: *linux
         env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=2
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=3
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=4
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=3
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=4
       # - <<: *linux
       #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=5
       # - <<: *linux
