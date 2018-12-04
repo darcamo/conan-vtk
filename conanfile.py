@@ -17,7 +17,7 @@ import shutil
 
 class vtkConan(ConanFile):
     name = "vtk"
-    version = "8.1.1"
+    version = "8.1.2"
     homepage = "https://www.vtk.org/"
     license = "BSD license"
     url = "https://github.com/darcamo/conan-vtk"
@@ -31,7 +31,8 @@ class vtkConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        tools.get("https://www.vtk.org/files/release/8.1/VTK-{}.zip".format(
+        tools.get("https://www.vtk.org/files/release/{}/VTK-{}.zip".format(
+            ".".join(self.version.split(".")[:-1]), # Get only X.Y version, instead of X.Y.Z
             self.version))
         os.rename("VTK-{}".format(self.version), "sources")
         tools.replace_in_file("sources/CMakeLists.txt",
