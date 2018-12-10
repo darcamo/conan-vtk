@@ -73,10 +73,10 @@ matrix:
       # - <<: *linux
       #   env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=lasote/conanclang50 CONAN_CURRENT_PAGE=8
 
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=1
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=2
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=1
+      # - <<: *linux
+      #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=2
       # - <<: *linux
       #   env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=darcamo/archconanclang CONAN_CURRENT_PAGE=3
       # - <<: *linux
