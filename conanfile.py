@@ -11,13 +11,13 @@ import shutil
 # libraries with factories are properly initialized. Without an
 # "INCLUDE(${VTK_USE_FILE})" in your CMakeLists file you will still be able to
 # compile and link with VTK, but when running the executable you will get an
-# error. Note, however, then you can utill use conan for the
+# error. Note, however, that you can utill use conan for the
 # target_link_libraries as usual in your CMakeLists file.
 
 
 class vtkConan(ConanFile):
     name = "vtk"
-    version = "8.1.2"
+    version = "8.2.0"
     homepage = "https://www.vtk.org/"
     license = "BSD license"
     url = "https://github.com/darcamo/conan-vtk"
@@ -69,7 +69,7 @@ SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
-        self.cpp_info.includedirs = ["include/vtk-8.1"]
+        self.cpp_info.includedirs = ["include/vtk-{}".format(self.version[:-2])]
 
         self.cpp_info.defines = ["vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)",
          "vtkIOExport_AUTOINIT=1(vtkIOExportOpenGL2)",
