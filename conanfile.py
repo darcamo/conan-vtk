@@ -3,7 +3,6 @@ from conans.tools import os_info, SystemPackageTool
 import os
 import shutil
 
-
 # IMPORTANT NOTE: Even though this is a conan recipe to install VTK, when
 # consuming this recipe you should still call find_package for the VTK library
 # in order to have the ${VTK_USE_FILE} variable in CMake that you should
@@ -17,7 +16,7 @@ import shutil
 
 class vtkConan(ConanFile):
     name = "vtk"
-    version = "9.0.0"
+    version = "9.0.1"
     homepage = "https://www.vtk.org/"
     license = "BSD license"
     url = "https://github.com/darcamo/conan-vtk"
@@ -25,6 +24,7 @@ class vtkConan(ConanFile):
     description = "The Visualization Toolkit (VTK) is an open-source, \
         freely available software system for 3D computer graphics, \
         image processing, and visualization."
+
     settings = "os", "compiler", "build_type", "arch"
     # options = {"shared": [True, False]}
     # default_options = "shared=True"
@@ -32,15 +32,32 @@ class vtkConan(ConanFile):
 
     def source(self):
         tools.get("https://www.vtk.org/files/release/{}/VTK-{}.tar.gz".format(
-            ".".join(self.version.split(".")[:-1]), # Get only X.Y version, instead of X.Y.Z
+            ".".join(self.version.split(".")
+                     [:-1]),  # Get only X.Y version, instead of X.Y.Z
             self.version))
         os.rename("VTK-{}".format(self.version), "sources")
-        tools.replace_in_file("sources/CMakeLists.txt",
-                              "project(VTK)",
-                              """project(VTK)
+        tools.replace_in_file(
+            "sources/CMakeLists.txt", "project(VTK)", """project(VTK)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
+
+        # xxxxxxxxxx Add missing include to some files xxxxxxxxxxxxxxxxxxxxxxxxx
+        # Related issue in vtk repository
+        # https://gitlab.kitware.com/vtk/vtk/-/issues/18194#
+        # After the issue is resolved this block of code should be removed from the recipe
+        for file in [
+                "sources/Common/Core/vtkGenericDataArrayLookupHelper.h",
+                "sources/Common/DataModel/vtkPiecewiseFunction.cxx",
+                "sources/Rendering/Core/vtkColorTransferFunction.cxx"
+        ]:
+            tools.replace_in_file(file, "#include <vector>", """#include <vector>
+#include <limits>""")
+
+        tools.replace_in_file("sources/Filters/HyperTree/vtkHyperTreeGridThreshold.cxx", "#include <cmath>", """#include <cmath>
+#include <limits>""")
+        # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 
     def imports(self):
         self.copy("*.dll", dst="bin", src="bin")
@@ -54,7 +71,8 @@ SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
             else:
                 package_names = [
                     "freeglut3-dev", "mesa-common-dev", "mesa-utils-extra",
-                    "libgl1-mesa-dev", "libglapi-mesa"]
+                    "libgl1-mesa-dev", "libglapi-mesa"
+                ]
 
             for name in package_names:
                 installer.install(name)
@@ -69,11 +87,15 @@ SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
-        self.cpp_info.includedirs = ["include/vtk-{}".format(self.version[:-2])]
+        self.cpp_info.includedirs = [
+            "include/vtk-{}".format(self.version[:-2])
+        ]
 
-        self.cpp_info.defines = ["vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)",
-         "vtkIOExport_AUTOINIT=1(vtkIOExportOpenGL2)",
-         "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)",
-         "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)",
-         "vtkRenderingOpenGL2_AUTOINIT=1(vtkRenderingGL2PSOpenGL2)",
-         "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)"]
+        self.cpp_info.defines = [
+            "vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)",
+            "vtkIOExport_AUTOINIT=1(vtkIOExportOpenGL2)",
+            "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)",
+            "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)",
+            "vtkRenderingOpenGL2_AUTOINIT=1(vtkRenderingGL2PSOpenGL2)",
+            "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)"
+        ]
