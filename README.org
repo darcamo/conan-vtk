@@ -1,0 +1,27 @@
+
+Conan recipe for the VTK library.
+
+This recipe was only tested on Linux.
+
+
+To use it, clone this repository and run the command below from the recipe folder.
+#+begin_src bash
+conan create . --build=missing -s build_type=Release
+#+end_src
+
+This will download vtk and install it in your conan cache.
+You can run the command
+#+begin_src bash
+conan search vtk
+#+end_src
+to search for vtk in your local cache and confirm it was indeed installed.
+
+After that, just add vtk to your dependencies and conan should find the version in your local cache.
+
+If you have a local conan repository (see [[https://docs.conan.io/en/1.6/uploading_packages/artifactory_ce.html][this link]]) you can also upload the recipe to it
+after it is installed in your local cache with the command below
+#+begin_src bash
+conan upload vtk -r=your_conan_repo
+#+end_src
+If you also want to upload the binary (such that subsequent installs from this repository
+do not need to compile vtk) also pass the option ~--all~ to the above command.
