@@ -1,101 +1,99 @@
-from conans import ConanFile, CMake, tools
-from conans.tools import os_info, SystemPackageTool
-import os
-import shutil
+# noqa: D100
 
-# IMPORTANT NOTE: Even though this is a conan recipe to install VTK, when
-# consuming this recipe you should still call find_package for the VTK library
-# in order to have the ${VTK_USE_FILE} variable in CMake that you should
-# include according with VTK documentation. This is necessary such that vtk
-# libraries with factories are properly initialized. Without an
-# "INCLUDE(${VTK_USE_FILE})" in your CMakeLists file you will still be able to
-# compile and link with VTK, but when running the executable you will get an
-# error. Note, however, that you can utill use conan for the
-# target_link_libraries as usual in your CMakeLists file.
+from conan import ConanFile
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.files import get, replace_in_file, collect_libs
+from pathlib import Path
 
 
-class vtkConan(ConanFile):
+class vtkRecipe(ConanFile):  # noqa: D101
     name = "vtk"
-    version = "9.0.1"
-    homepage = "https://www.vtk.org/"
+    user = "gtel"
+    channel = "stable"
+
+    # Optional metadata
     license = "BSD license"
-    url = "https://github.com/darcamo/conan-vtk"
     author = "Darlan Cavalcante Moreira (darcamo@gmail.com)"
+    url = "https://github.com/darcamo/conan-vtk"
     description = "The Visualization Toolkit (VTK) is an open-source, \
         freely available software system for 3D computer graphics, \
         image processing, and visualization."
+    topics = ("3D", "visualization", "graphics")
 
+    # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    # options = {"shared": [True, False]}
-    # default_options = "shared=True"
-    generators = "cmake"
+    options = {"shared": [True, False], "fPIC": [True, False],
+               "wrap_python": [True, False]}
+    default_options = {"shared": False, "fPIC": True, "wrap_python": False}
 
-    def source(self):
-        tools.get("https://www.vtk.org/files/release/{}/VTK-{}.tar.gz".format(
-            ".".join(self.version.split(".")
-                     [:-1]),  # Get only X.Y version, instead of X.Y.Z
-            self.version))
-        os.rename("VTK-{}".format(self.version), "sources")
-        tools.replace_in_file(
-            "sources/CMakeLists.txt", "project(VTK)", """project(VTK)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-SET(CMAKE_INSTALL_RPATH "$ORIGIN")""")
+    # Sources are located in the same place as this recipe, copy them
+    # to the recipe
+    exports_sources = "CMakeLists.txt", "src/*", "include/*"
 
-        # xxxxxxxxxx Add missing include to some files xxxxxxxxxxxxxxxxxxxxxxxxx
-        # Related issue in vtk repository
-        # https://gitlab.kitware.com/vtk/vtk/-/issues/18194#
-        # After the issue is resolved this block of code should be removed from the recipe
-        for file in [
-                "sources/Common/Core/vtkGenericDataArrayLookupHelper.h",
-                "sources/Common/DataModel/vtkPiecewiseFunction.cxx",
-                "sources/Rendering/Core/vtkColorTransferFunction.cxx"
-        ]:
-            tools.replace_in_file(file, "#include <vector>", """#include <vector>
-#include <limits>""")
+    def source(self):  # noqa: D102
+        get(self, self.conan_data['sources'][self.version], strip_root=True)
+        # VTK source is missing include for <cinttypes> in some
+        # headers, which can results in compile errors (tested with
+        # gcc 13)
+        replace_in_file(self, Path(self.source_folder) / "ThirdParty/libproj/vtklibproj/src/proj_json_streaming_writer.hpp", "#include <string>", """#include <string>
+#include <cinttypes>""")  # noqa: E501
+        replace_in_file(self, Path(self.source_folder) / "IO/Image/vtkSEPReader.h", "#include <string> // for std::string", """#include <string> // for std::string
+#include <cinttypes>""")  # noqa: E501
 
-        tools.replace_in_file("sources/Filters/HyperTree/vtkHyperTreeGridThreshold.cxx", "#include <cmath>", """#include <cmath>
-#include <limits>""")
-        # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    def config_options(self):  # noqa: D102
+        if self.settings.os == "Windows":
+            self.options.rm_safe("fPIC")
 
+    def configure(self):  # noqa: D102
+        if self.options.shared:
+            self.options.rm_safe("fPIC")
 
-    def imports(self):
-        self.copy("*.dll", dst="bin", src="bin")
-        self.copy("*.dylib*", dst="lib", src="lib")
+    def layout(self):  # noqa: D102
+        cmake_layout(self)
 
-    def system_requirements(self):
-        if os_info.is_linux:
-            installer = SystemPackageTool()
-            if os_info.linux_distro == 'arch':
-                package_names = ["freeglut", "libxt"]
-            else:
-                package_names = [
-                    "freeglut3-dev", "mesa-common-dev", "mesa-utils-extra",
-                    "libgl1-mesa-dev", "libglapi-mesa"
-                ]
+    def generate(self):  # noqa: D102
+        deps = CMakeDeps(self)
+        deps.generate()
+        tc = CMakeToolchain(self)
+        tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared
+        tc.cache_variables["VTK_WRAP_PYTHON"] = self.options.wrap_python
+        tc.generate()
 
-            for name in package_names:
-                installer.install(name)
-
-    def build(self):
-        os.mkdir("build")
-        shutil.move("conanbuildinfo.cmake", "build/")
+    def build(self):  # noqa: D102
         cmake = CMake(self)
-        cmake.configure(source_folder="sources", build_folder="build")
+        cmake.configure()
         cmake.build()
+
+    def package(self):  # noqa: D102
+        cmake = CMake(self)
         cmake.install()
 
-    def package_info(self):
-        self.cpp_info.libs = tools.collect_libs(self)
-        self.cpp_info.includedirs = [
-            "include/vtk-{}".format(self.version[:-2])
-        ]
+    def package_info(self):  # noqa: D102
+        # NOTE: This will only work for consumers using the CMakeDeps
+        # and CMakeToolchain generators. Also, in consumers
+        # CMakeLists.txt file they need to link with VTK using
+        # something like
+        #
+        #    target_link_libraries(myexe PRIVATE ${VTK_LIBRARIES})
+        #
+        # and include the code below after that
+        #
+        #     include(vtkModule)
+        #     # vtk_module_autoinit is needed
+        #     vtk_module_autoinit(
+        #         TARGETS example
+        #         MODULES ${VTK_LIBRARIES}
+        #     )
+        #
+        # This is how VTK is consumed in the VTK examples when it is
+        # installed in the system.
 
-        self.cpp_info.defines = [
-            "vtkDomainsChemistry_AUTOINIT=1(vtkDomainsChemistryOpenGL2)",
-            "vtkIOExport_AUTOINIT=1(vtkIOExportOpenGL2)",
-            "vtkRenderingContext2D_AUTOINIT=1(vtkRenderingContextOpenGL2)",
-            "vtkRenderingCore_AUTOINIT=3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)",
-            "vtkRenderingOpenGL2_AUTOINIT=1(vtkRenderingGL2PSOpenGL2)",
-            "vtkRenderingVolume_AUTOINIT=1(vtkRenderingVolumeOpenGL2)"
-        ]
+        # Tell Conan CMakeDeps generator in the consumers to NOT
+        # generate the config files for VTK
+        self.cpp_info.set_property("cmake_find_mode", "none")
+        # This will add the folder where VTK installed its cmake
+        # config files to the CMAKE_PREFIX_PATH variable in the
+        # consumer.
+        two_digit_version = self.version[:-2]
+        assert len(two_digit_version) == 3
+        self.cpp_info.builddirs = [f"lib/cmake/vtk-{two_digit_version}"]

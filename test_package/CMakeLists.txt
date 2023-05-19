@@ -1,12 +1,28 @@
-project(test_package)
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.15)
+project(PackageTest CXX)
 
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
+find_package(VTK COMPONENTS
+  CommonColor
+  CommonCore
+  FiltersSources
+  InteractionStyle
+  RenderingContextOpenGL2
+  RenderingCore
+  RenderingFreeType
+  RenderingGL2PSOpenGL2
+  RenderingOpenGL2
+)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+if (NOT VTK_FOUND)
+  message(FATAL_ERROR "CylinderExample: Unable to find the VTK build folder.")
+endif()
 
-file(GLOB SOURCE_FILES *.cpp)
+add_executable(example src/example.cpp)
+target_link_libraries(example PRIVATE ${VTK_LIBRARIES})
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+include(vtkModule)
+# vtk_module_autoinit is needed
+vtk_module_autoinit(
+  TARGETS example
+  MODULES ${VTK_LIBRARIES}
+)

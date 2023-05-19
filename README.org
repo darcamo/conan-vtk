@@ -9,19 +9,30 @@ To use it, clone this repository and run the command below from the recipe folde
 conan create . --build=missing -s build_type=Release
 #+end_src
 
-This will download vtk and install it in your conan cache.
-You can run the command
-#+begin_src bash
-conan search vtk
-#+end_src
-to search for vtk in your local cache and confirm it was indeed installed.
+Note that VTK does some extra stuff in its installed CMake config files *that is not
+replicated in the Conan recipe*. Because of this, the recipe disables generation of the
+CMake config files in the consumers (when using CMakeDeps generator) and instead it adds
+the folder where VTK installs its own CMake config files to *buildirs*. What this means is
+that VTK native CMake config files will be used instead of Conan generated ones, which
+also means that consumers can only use CMake build system and must consume VTK according
+to VTK's documentation. The example below has the correct code in the consumers
+/CMakeLists.txt/ file.
 
-After that, just add vtk to your dependencies and conan should find the version in your local cache.
+#+begin_src cmake
+cmake_minimum_required(VERSION 3.15)
+project(PackageTest CXX)
 
-If you have a local conan repository (see [[https://docs.conan.io/en/1.6/uploading_packages/artifactory_ce.html][this link]]) you can also upload the recipe to it
-after it is installed in your local cache with the command below
-#+begin_src bash
-conan upload vtk -r=your_conan_repo
+find_package(VTK REQUIRED
+)
+
+add_executable(example src/example.cpp)
+target_link_libraries(example PRIVATE ${VTK_LIBRARIES})
+
+include(vtkModule)
+# vtk_module_autoinit is needed
+vtk_module_autoinit(
+  TARGETS example
+  MODULES ${VTK_LIBRARIES}
+)
 #+end_src
-If you also want to upload the binary (such that subsequent installs from this repository
-do not need to compile vtk) also pass the option ~--all~ to the above command.
+

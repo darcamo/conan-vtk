@@ -1,23 +1,26 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from conans import ConanFile, CMake
 import os
 
+from conan import ConanFile
+from conan.tools.cmake import CMake, cmake_layout
+from conan.tools.build import can_run
 
-class TestPackageConan(ConanFile):
+
+class vtkTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    generators = "cmake"
+    generators = "CMakeDeps", "CMakeToolchain"
+
+    def requirements(self):
+        self.requires(self.tested_reference_str)
 
     def build(self):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
 
-    def imports(self):
-        self.copy("*.dll", dst="bin", src="bin")
-        self.copy("*.dylib*", dst="bin", src="lib")
+    def layout(self):
+        cmake_layout(self)
 
     def test(self):
-        bin_path = os.path.join("bin", "test_package")
-        self.run(bin_path)
+        if can_run(self):
+            cmd = os.path.join(self.cpp.build.bindir, "example")
+            self.run(cmd, env="conanrun")
