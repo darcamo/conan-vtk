@@ -22,9 +22,12 @@ class vtkRecipe(ConanFile):  # noqa: D101
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False],
-               "wrap_python": [True, False]}
-    default_options = {"shared": False, "fPIC": True, "wrap_python": False}
+    options = {"shared": [True, False], 
+               "fPIC": [True, False],
+               "wrap_python": [True, False],
+               "group_qt": [True, False]}
+    
+    default_options = {"shared": False, "fPIC": True, "wrap_python": False, "group_qt": False}
 
     # Sources are located in the same place as this recipe, copy them
     # to the recipe
@@ -40,6 +43,10 @@ class vtkRecipe(ConanFile):  # noqa: D101
         replace_in_file(self, Path(self.source_folder) / "IO/Image/vtkSEPReader.h", "#include <string> // for std::string", """#include <string> // for std::string
 #include <cinttypes>""")  # noqa: E501
 
+    def requirements(self):
+        if self.options.group_qt:
+            self.requires("qt/[>=5.15.2 <=5.15.11]")
+
     def config_options(self):  # noqa: D102
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
@@ -47,6 +54,9 @@ class vtkRecipe(ConanFile):  # noqa: D101
     def configure(self):  # noqa: D102
         if self.options.shared:
             self.options.rm_safe("fPIC")
+
+        if self.options.group_qt:
+            self.options["qt"].shared = True
 
     def layout(self):  # noqa: D102
         cmake_layout(self)
@@ -57,6 +67,14 @@ class vtkRecipe(ConanFile):  # noqa: D101
         tc = CMakeToolchain(self)
         tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared
         tc.cache_variables["VTK_WRAP_PYTHON"] = self.options.wrap_python
+
+        if self.options.group_qt:
+            tc.cache_variables["VTK_GROUP_ENABLE_Qt"] = "YES"
+            tc.cache_variables["VTK_MODULE_ENABLE_VTK_GUISupportQt"] = "YES"
+            tc.cache_variables["VTK_MODULE_ENABLE_VTK_GUISupportQtQuick"] = "DONT_WANT" # Not available
+            tc.cache_variables["VTK_MODULE_ENABLE_VTK_ViewsQt"] = "YES"
+            tc.cache_variables["VTK_MODULE_ENABLE_VTK_RenderingQt"] = "YES"
+
         tc.generate()
 
     def build(self):  # noqa: D102
@@ -97,3 +115,6 @@ class vtkRecipe(ConanFile):  # noqa: D101
         two_digit_version = self.version[:-2]
         assert len(two_digit_version) == 3
         self.cpp_info.builddirs = [f"lib/cmake/vtk-{two_digit_version}"]
+
+        if self.options.group_qt:
+            self.cpp.requires = ["qt"]
